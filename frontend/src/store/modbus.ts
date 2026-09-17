@@ -1,6 +1,8 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { Device, Alarm, ModbusRegister } from '../types'
+// Single source of truth for device/point defaults, shared with the backend.
+import sharedDevices from '../../../shared/devices.json'
 
 export const useModbusStore = defineStore('modbus', () => {
   const devices = ref<Device[]>([])
@@ -14,38 +16,22 @@ export const useModbusStore = defineStore('modbus', () => {
   const onlineDevices = computed(() => devices.value.filter(d => d.online))
 
   function initMockDevices() {
-    devices.value = [
-      {
-        id: 'dev1', name: '温湿度传感器-A区', ip: '192.168.1.101', port: 502, slaveId: 1, online: true,
-        registers: [
-          { address: 0, name: '温度', type: 'holding', value: 25.6, unit: '°C', updatedAt: Date.now() },
-          { address: 1, name: '湿度', type: 'holding', value: 62.3, unit: '%RH', updatedAt: Date.now() },
-          { address: 2, name: '露点', type: 'holding', value: 17.8, unit: '°C', updatedAt: Date.now() },
-        ]
-      },
-      {
-        id: 'dev2', name: '压力变送器-B区', ip: '192.168.1.102', port: 502, slaveId: 2, online: true,
-        registers: [
-          { address: 0, name: '管道压力', type: 'holding', value: 3.45, unit: 'MPa', updatedAt: Date.now() },
-          { address: 1, name: '差压', type: 'holding', value: 0.12, unit: 'kPa', updatedAt: Date.now() },
-        ]
-      },
-      {
-        id: 'dev3', name: '电机控制器-C区', ip: '192.168.1.103', port: 502, slaveId: 3, online: false,
-        registers: [
-          { address: 0, name: '转速', type: 'holding', value: 1480, unit: 'RPM', updatedAt: Date.now() },
-          { address: 1, name: '电流', type: 'holding', value: 12.5, unit: 'A', updatedAt: Date.now() },
-          { address: 2, name: '运行状态', type: 'coil', value: true, unit: '', updatedAt: Date.now() },
-        ]
-      },
-      {
-        id: 'dev4', name: '流量计-D区', ip: '192.168.1.104', port: 502, slaveId: 4, online: true,
-        registers: [
-          { address: 0, name: '瞬时流量', type: 'holding', value: 156.7, unit: 'L/min', updatedAt: Date.now() },
-          { address: 1, name: '累计流量', type: 'holding', value: 98234, unit: 'L', updatedAt: Date.now() },
-        ]
-      },
-    ]
+    devices.value = sharedDevices.devices.map(d => ({
+      id: d.id,
+      name: d.name,
+      ip: d.ip,
+      port: d.port,
+      slaveId: d.slave_id,
+      online: d.online,
+      registers: d.registers.map(r => ({
+        address: r.address,
+        name: r.name,
+        type: r.type as ModbusRegister['type'],
+        value: r.value,
+        unit: r.unit,
+        updatedAt: Date.now(),
+      })),
+    }))
     selectedDevice.value = devices.value[0]
   }
 

@@ -1,3 +1,12 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-export default defineConfig({ plugins: [vue()], server: { port: 5180, open: true, proxy: { '/api': 'http://localhost:8002' } } })
+export default defineConfig({
+  plugins: [vue()],
+  server: {
+    port: 5180,
+    open: true,
+    proxy: { '/api': 'http://localhost:8002' },
+    // Allow importing the shared device definitions at <repo>/shared in dev mode.
+    fs: { allow: ['..'] },
+  },
+})
